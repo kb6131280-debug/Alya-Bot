@@ -239,18 +239,26 @@ if (config.autoRestart) {
 
 	global.utils.sendMail = sendMail;
 	global.utils.transporter = transporter;
+	// ———————————————— CHECK VERSION ————————————————
+	try {
+		const { data: { version } } = await axios.get(
+			"https://raw.githubusercontent.com/mahmudx7/Hinata-Bot-V3/main/package.json"
+		);
+		const currentVersion = require("./package.json").version;
 
-	// ———————————————— CHECK VERSION ———————————————— //
-	const { data: { version } } = await axios.get("https://raw.githubusercontent.com/mahmudx7/Hinata-Bot-V3/main/package.json");
-	const currentVersion = require("./package.json").version;
-	if (compareVersion(version, currentVersion) === 1)
-		utils.log.master("NEW VERSION", getText(
-			"Goat",
-			"newVersionDetected",
-			colors.gray(currentVersion),
-			colors.hex("#eb6a07", version),
-			colors.hex("#eb6a07", "node update")
-		));
+		if (compareVersion(version, currentVersion) === 1) {
+			utils.log.master("NEW VERSION", getText(
+				"Goat",
+				"newVersionDetected",
+				colors.gray(currentVersion),
+				colors.hex("#eb6a07", version),
+				colors.hex("#eb6a07", "node update")
+			));
+		}
+	} catch (error) {
+		utils.log.warn("VERSION CHECK", "Could not check for updates. Continuing startup.");
+						}
+			
 	// —————————— CHECK FOLDER GOOGLE DRIVE —————————— //
 	const parentIdGoogleDrive = await utils.drive.checkAndCreateParentFolder("GoatBot");
 	utils.drive.parentID = parentIdGoogleDrive;
