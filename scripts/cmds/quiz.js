@@ -1,121 +1,217 @@
-const axios = require("axios");
 
-const mahmud = async () => {
-        const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
-        return base.data.mahmud;
+const questions = {
+  bn: [
+    {
+      question: "বাংলাদেশের জাতীয় ফুল কোনটি?",
+      options: { a: "গোলাপ", b: "শাপলা", c: "জবা", d: "বেলি" },
+      answer: "b"
+    },
+    {
+      question: "বাংলাদেশের রাজধানী কোনটি?",
+      options: { a: "চট্টগ্রাম", b: "খুলনা", c: "ঢাকা", d: "রাজশাহী" },
+      answer: "c"
+    },
+    {
+      question: "বাংলাদেশের জাতীয় ফল কোনটি?",
+      options: { a: "আম", b: "কাঁঠাল", c: "লিচু", d: "জাম" },
+      answer: "b"
+    },
+    {
+      question: "পৃথিবীর সবচেয়ে বড় মহাসাগর কোনটি?",
+      options: { a: "আটলান্টিক", b: "ভারত", c: "প্রশান্ত", d: "আর্কটিক" },
+      answer: "c"
+    },
+    {
+      question: "বাংলাদেশের স্বাধীনতা দিবস কবে?",
+      options: { a: "২১ ফেব্রুয়ারি", b: "২৬ মার্চ", c: "১৬ ডিসেম্বর", d: "১৪ এপ্রিল" },
+      answer: "b"
+    }
+  ],
+
+  en: [
+    {
+      question: "What is the capital of Bangladesh?",
+      options: { a: "Chittagong", b: "Dhaka", c: "Khulna", d: "Rajshahi" },
+      answer: "b"
+    },
+    {
+      question: "Which planet is known as the Red Planet?",
+      options: { a: "Earth", b: "Venus", c: "Mars", d: "Jupiter" },
+      answer: "c"
+    },
+    {
+      question: "How many days are there in a leap year?",
+      options: { a: "364", b: "365", c: "366", d: "367" },
+      answer: "c"
+    },
+    {
+      question: "Which is the largest ocean?",
+      options: { a: "Atlantic", b: "Indian", c: "Pacific", d: "Arctic" },
+      answer: "c"
+    },
+    {
+      question: "What is the national flower of Bangladesh?",
+      options: { a: "Rose", b: "Water Lily", c: "Lotus", d: "Sunflower" },
+      answer: "b"
+    }
+  ]
 };
 
 module.exports = {
-        config: {
-                name: "quiz",
-                aliases: ["qz"],
-                version: "1.7",
-                author: "MahMUD",
-                countDown: 10,
-                role: 0,
-                description: {
-                        bn: "সাধারণ জ্ঞান কুইজ খেলে কয়েন এবং এক্সপি জিতুন",
-                        en: "Play general knowledge quiz to win coins and exp",
-                        vi: "Chơi trò chơi đố vui kiến thức để giành được xu và exp"
-                },
-                category: "game",
-                guide: {
-                        bn: '   {pn} en: ইংরেজি কুইজ\n   {pn} bn: বাংলা কুইজ',
-                        en: '   {pn} en: English quiz\n   {pn} bn: Bangla quiz',
-                        vi: '   {pn} en: Câu đố tiếng Anh\n   {pn} bn: Câu đố tiếng Bengal'
-                }
+  config: {
+    name: "quiz",
+    aliases: ["qz"],
+    version: "2.0",
+    author: "MahMUD",
+    countDown: 10,
+    role: 0,
+    description: {
+      bn: "কুইজ খেলে কয়েন ও XP জিতুন",
+      en: "Play quiz and win coins and XP"
+    },
+    category: "game",
+    guide: {
+      bn: "{pn} bn অথবা {pn} en",
+      en: "{pn} bn or {pn} en"
+    }
+  },
+
+  langs: {
+    bn: {
+      reply: "উত্তর দিতে A, B, C অথবা D লিখে Reply করো।",
+      correct: "✅ সঠিক উত্তর! তুমি পেয়েছো %1 কয়েন ও %2 XP।",
+      wrong: "❌ ভুল উত্তর! সঠিক উত্তর ছিল: %1",
+      notYour: "এই Quiz টি তোমার জন্য নয়!",
+      error: "সমস্যা হয়েছে: %1"
+    },
+    en: {
+      reply: "Reply with A, B, C or D.",
+      correct: "✅ Correct! You earned %1 coins and %2 XP.",
+      wrong: "❌ Wrong answer! The correct answer was: %1",
+      notYour: "This quiz is not yours!",
+      error: "An error occurred: %1"
+    }
+  },
+
+  onStart: async function ({ api, event, args, getLang }) {
+    try {
+      const input = args.join("").toLowerCase();
+      const language =
+        input === "en" || input === "english" ? "en" : "bn";
+
+      const list = questions[language];
+      const quiz = list[Math.floor(Math.random() * list.length)];
+
+      const { a, b, c, d } = quiz.options;
+
+      const quizMsg =
+        `╭──✦ ${quiz.question}\n\n` +
+        `├ A) ${a}\n` +
+        `├ B) ${b}\n` +
+        `├ C) ${c}\n` +
+        `├ D) ${d}\n` +
+        `╰──────────────\n\n` +
+        getLang("reply");
+
+      api.sendMessage(
+        quizMsg,
+        event.threadID,
+        (err, info) => {
+          if (err || !info) return;
+
+          global.GoatBot.onReply.set(info.messageID, {
+            type: "reply",
+            commandName: this.config.name,
+            author: event.senderID,
+            messageID: info.messageID,
+            answer: quiz.answer,
+            options: quiz.options,
+            language
+          });
+
+          setTimeout(() => {
+            global.GoatBot.onReply.delete(info.messageID);
+            api.unsendMessage(info.messageID);
+          }, 40000);
         },
+        event.messageID
+      );
 
-        langs: {
-                bn: {
-                        reply: "𝐑𝐞𝐩𝐥𝐲 𝐰𝐢𝐭𝐡 𝐲𝐨𝐮𝐫 𝐚𝐧𝐬𝐰𝐞𝐫.",
-                        correct: "✅ | একদম সঠিক উত্তর বেবি!\n\nতুমি জিতেছো %1 কয়েন এবং %2 এক্সপি।",
-                        wrong: "❌ | উত্তরটি ভুল হয়েছে বেবি!\n\nসঠিক উত্তর ছিল: %1",
-                        notYour: "× বেবি, এটি তোমার কুইজ নয়! নিজের জন্য শুরু করো। >🐸",
-                        error: "× সমস্যা হয়েছে: %1। প্রয়োজনে Contact MahMUD।"
-                },
-                en: {
-                        reply: "𝐑𝐞𝐩𝐥𝐲 𝐰𝐢𝐭𝐡 𝐲𝐨𝐮𝐫 𝐚𝐧𝐬𝐰𝐞𝐫.",
-                        correct: "✅ | Correct answer baby!\n\nYou earned %1 coins & %2 exp.",
-                        wrong: "❌ | Wrong answer baby!\n\nThe correct answer was: %1",
-                        notYour: "𝐓𝐡𝐢𝐬 𝐢𝐬 𝐧𝐨𝐭 𝐲𝐨𝐮𝐫 𝐪𝐮𝐢𝐳 𝐛𝐚𝐛𝐲 >🐸",
-                        error: "× API error: %1. Contact MahMUD for help."
-                },
-                vi: {
-                        reply: "Trả lời bằng đáp án của bạn đi cưng",
-                        correct: "✅ | Đáp án chính xác cưng ơi!\n\nBạn nhận được %1 xu & %2 exp.",
-                        wrong: "❌ | Sai rồi cưng ơi!\n\n💡 Đáp án đúng là: %1",
-                        notYour: "× Đây không phải câu đố của bạn cưng à! >🐸",
-                        error: "× Lỗi: %1. Liên hệ MahMUD để được hỗ trợ."
-                }
-        },
+    } catch (error) {
+      return api.sendMessage(
+        getLang("error", error.message),
+        event.threadID,
+        event.messageID
+      );
+    }
+  },
 
-        onStart: async function ({ api, event, args, getLang }) {
-                const authorName = String.fromCharCode(77, 97, 104, 77, 85, 68); 
-                if (this.config.author !== authorName) {
-                        return api.sendMessage("You are not authorized to change the author name.", event.threadID, event.messageID);
-                }
-                
-                try {
-                        const input = args.join("").toLowerCase();
-                        const category = input === "en" || input === "english" ? "english" : "bangla";
+  onReply: async function ({
+    event,
+    api,
+    Reply,
+    usersData,
+    getLang
+  }) {
+    try {
+      if (event.senderID !== Reply.author) {
+        return api.sendMessage(
+          getLang("notYour"),
+          event.threadID,
+          event.messageID
+        );
+      }
 
-                        const apiUrl = await mahmud();
-                        const res = await axios.get(`${apiUrl}/api/quiz?category=${category}`);
-                        const quiz = res.data;
+      const userReply = String(event.body || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[).]/g, "");
 
-                        if (!quiz) return api.sendMessage("× No quiz available baby.", event.threadID, event.messageID);
+      const selected = userReply.replace(/^[a-d]\s*/, "");
 
-                        const { question, correctAnswer, options } = quiz;
-                        const { a, b, c, d } = options;
+      const answer = Reply.answer;
+      const correctOption = Reply.options[answer];
 
-                        const quizMsg = `\n╭──✦ ${question}\n`
-                                + `├‣ 𝗔) ${a}\n`
-                                + `├‣ 𝗕) ${b}\n`
-                                + `├‣ 𝗖) ${c}\n`
-                                + `├‣ 𝗗) ${d}\n`
-                                + `╰──────────────────‣\n`
-                                + `${getLang("reply")}`;
+      const isCorrect =
+        selected === answer ||
+        selected === correctOption.toLowerCase();
 
-                        api.sendMessage(quizMsg, event.threadID, (error, info) => {
-                                global.GoatBot.onReply.set(info.messageID, {
-                                        type: "reply",
-                                        commandName: this.config.name,
-                                        author: event.senderID,
-                                        messageID: info.messageID,
-                                        correctAnswer
-                                });
+      global.GoatBot.onReply.delete(Reply.messageID);
 
-                                setTimeout(() => {
-                                        api.unsendMessage(info.messageID);
-                                }, 40000);
-                        }, event.messageID);
+      await api.unsendMessage(Reply.messageID);
 
-                } catch (error) {
-                        api.sendMessage(getLang("error", error.message), event.threadID, event.messageID);
-                }
-        },
+      if (isCorrect) {
+        const author = Reply.author;
+        const userData = await usersData.get(author);
 
-        onReply: async function ({ event, api, Reply, usersData, getLang }) {
-                const { correctAnswer, author } = Reply;
-                if (event.senderID !== author) return api.sendMessage(getLang("notYour"), event.threadID, event.messageID);
+        const rewardCoins = 500;
+        const rewardExp = 121;
 
-                const userReply = event.body.trim().toLowerCase();
-                const userData = await usersData.get(author);
-                const rewardCoins = 500;
-                const rewardExp = 121;
+        await usersData.set(author, {
+          money: Number(userData.money || 0) + rewardCoins,
+          exp: Number(userData.exp || 0) + rewardExp,
+          data: userData.data
+        });
 
-                await api.unsendMessage(Reply.messageID);
+        return api.sendMessage(
+          getLang("correct", rewardCoins, rewardExp),
+          event.threadID,
+          event.messageID
+        );
+      }
 
-                if (userReply === correctAnswer.toLowerCase()) {
-                        await usersData.set(author, {
-                                money: userData.money + rewardCoins,
-                                exp: userData.exp + rewardExp,
-                                data: userData.data
-                        });
-                        return api.sendMessage(getLang("correct", rewardCoins, rewardExp), event.threadID, event.messageID);
-                } else {
-                        return api.sendMessage(getLang("wrong", correctAnswer), event.threadID, event.messageID);
-                }
-        }
+      return api.sendMessage(
+        getLang("wrong", `${answer.toUpperCase()}) ${correctOption}`),
+        event.threadID,
+        event.messageID
+      );
+
+    } catch (error) {
+      return api.sendMessage(
+        getLang("error", error.message),
+        event.threadID,
+        event.messageID
+      );
+    }
+  }
 };
